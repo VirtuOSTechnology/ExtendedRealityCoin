@@ -34,6 +34,11 @@ contract balances
 		if (accounts [_owner].addr == _owner) return accounts [_owner];
 	}
 	
+	function setAccount (address _owner, account _value) external onlyallow
+	{
+		if (accounts [_owner].addr == _owner) accounts [_owner] = _value;
+	}
+	
 	//	Install allow address
 	function setAllow (address _value) external onlyowner
 	{
