@@ -16,11 +16,11 @@ contract balances
 
 	address public owner = 0x0;
 	
-	//	This address allows access contract methods
-	address public allow = 0x0;
+	//	This address list allows access contract methods
+	mapping (address => bool) public allow;
 
 	modifier onlyowner {require (msg.sender == owner); _;}
-	modifier onlyallow {require (msg.sender == allow); _;}
+	modifier onlyallow {require (allow [msg.sender] == true); _;}
 
 	function balances (address _parent) public
 	{
@@ -39,10 +39,15 @@ contract balances
 		if (accounts [_owner].addr == _owner) accounts [_owner] = _value;
 	}
 	
-	//	Install allow address
-	function setAllow (address _value) external onlyowner
+	function isAllow (address _owner) external constant returns (bool)
 	{
-		allow = _value;
+		return allow [_owner];
+	}
+	
+	//	Install allow address
+	function setAllow (address _owner, bool _state) external onlyowner
+	{
+		allow [_owner] = _value;
 	}
 	
 	//	@notice		Get address of the tokens holder by index at the holders array
