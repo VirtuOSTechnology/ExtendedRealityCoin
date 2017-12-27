@@ -252,7 +252,7 @@ contract general
 		return true;
 	}
 	
-	//	@notice		Set contract deletion state by sending event message or/and delete contract with all data
+	//	@notice		Set contract remove state by sending event message or/and delete contract with all data
 	//	@param		onlyEvent	prevent full contract removing or not
 	function kill (bool onlyEvent) external
 	{
