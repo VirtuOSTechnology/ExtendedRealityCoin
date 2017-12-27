@@ -135,6 +135,35 @@ contract balances
 		if (accounts [_owner].addr == _owner) accounts [_owner].locked = _value;
 	}
 	
+	//	@notice		Set or drop lock value bits
+	//	@param		_owner	account address
+	//	@param		_value	bits value
+	//	@param		_on	set (true) or drop (false) for the current value
+	//	@result		Return lock value after all operations
+	function setLockBits (address _owner, uint _value, bool _on) external onlyallow returns (uint)
+	{
+		if (accounts [_owner].addr == _owner)
+		{
+			if (_on == true) account [_owner].locked = (account [_owner].locked | _value);
+			else account [_owner].locked = (account [_owner].locked ^ _value);
+			
+			return account [_owner].locked;
+		}
+		
+		return 0;
+	}
+	
+	//	@notice		Check lock bits
+	//	@param		_owner	account address
+	//	@param		_value	bits value
+	//	@result		Return true if all bits are set or false if not
+	function isLockBits (address _owner, uint _value) external onlyallow returns (bool)
+	{
+		if (accounts [_owner].addr == _owner && (account [_owner].locked & _value) != 0) return true;
+		
+		return false;
+	}
+	
 	//	@notice		Create new account
 	//	@param		_owner	account address
 	//	@result		Return holder address
@@ -154,23 +183,9 @@ contract balances
 		return _owner;
 	}
 	
-	//	@notice		Get account external identifier (e.g. remote serve control)
-	//	@param		_owner	account address
-	//	@result		UTF-8 string value of the identifier
-	function getIdentifier (address _owner) external onlyallow constant returns (string)
-	{
-		return accounts [_owner].identifier;
-	}
-
-	function setIdentifier (address _owner, string _value) external onlyallow
-	{
-		if (accounts [_owner].addr == _owner) accounts [_owner].identifier = _value;
-	}
-	
 	//	@notice		Default account info structure. See describtion at the bottom of this file
 	struct account
 	{
-		string identifier;
 		uint locked;
 		bool enabled;
 		uint value;
@@ -178,10 +193,10 @@ contract balances
 	}
 }
 
-contract general
+contract token
 {
-	string public name = 'Extended Reality Coin';
-	string public symbol = 'ERC';
+	string public name = 'Future Coin';
+	string public symbol = 'FC';
 	uint8 public decimals = 2;
 	string public version = '1.0 (Step 1 "PreInvest")';
 	string public description = "PreInvest stage for the next extension of the project";
@@ -217,7 +232,7 @@ contract general
 	event Migrating (bool removed);
 
 	//  Contract constructor
-	function general (address balancesAddress) public
+	function token (address balancesAddress) public
 	{
 		balance = balances (balancesAddress);
 
@@ -255,15 +270,15 @@ contract general
 		if (balance.getAddr (msg.sender) != msg.sender) balance.create (msg.sender);
 		if (balance.getAddr (reciever) != reciever) balance.create (reciever);
 		//	It's a binary flag
-		if ((uint lock = balance.getLock (msg.sender)) & LOCK_TRANSFER != 0) return false;
+		if (balance.isLockBits (msg.sender, LOCK_TRANSFER) == true) return false;
 
 		//	Lock address untill this operation not done
-		balance.setLock (msg.sender, (lock | LOCK_TRANSFER));
+		balance.setLockBits (msg.sender, LOCK_TRANSFER, true);
 
 		if (balance.getValue (msg.sender) < amount)
 		{
 			//	Balance of the sender low then required amount, so unlock address and exit
-			balance.setLock (msg.sender, (balance.getLock (msg.sender) ^ LOCK_TRANSFER));
+			balance.setLockBits (msg.sender, LOCK_TRANSFER, false);
 			return false;
 		}
 
@@ -272,7 +287,7 @@ contract general
 
 		Transfer (msg.sender, reciever, amount);
 
-		balance.setLock (msg.sender, (balance.getLock (msg.sender) ^ LOCK_TRANSFER));
+		balance.setLockBits (msg.sender, LOCK_TRANSFER, false);
 
 		return true;
 	}
@@ -366,7 +381,6 @@ contract general
 
 	struct account
 	{
-		string identifier;	//	External identifier. E.g. remote control server
 		uint locked;		//  What oprations is deprecated to the user
 		bool enabled;		//  Is account enabled
 		uint value;			//  Tokens balance
