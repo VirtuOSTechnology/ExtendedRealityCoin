@@ -5,6 +5,8 @@ interface recipientToken {function receiveApproval (address _from, uint256 _valu
 /*
 	@title	Contract allows to hold all tokens between migration of the main contract code
 	@author	Pereshein V.G. <envage@yandex.ru>
+	@notice	If you want to become a tokens sale investor, want to learn more about bounty program
+			or have questions, please write me. Now you can buy tokens at lower price 3500 tokens per ETH
 */
 contract balances
 {
