@@ -2,12 +2,19 @@ pragma solidity ^0.4.18;
 
 interface recipientToken {function receiveApproval (address _from, uint256 _value, address _token, bytes _extraData) public;}
 
+/*
+	@title	Contract allows to hold all tokens between migration of the main contract code
+	@author	Pereshein V.G. <envage@yandex.ru>
+*/
 contract balances
 {
+	//	Storing tokens here
 	mapping (address => account) public accounts;
 	address [] public holders;
 
 	address public owner = 0x0;
+	
+	//	This address allows access contract methods
 	address public allow = 0x0;
 
 	modifier onlyowner {require (msg.sender == owner); _;}
@@ -18,39 +25,62 @@ contract balances
 		owner = msg.sender;
 		allow = _parent;
 	}
-
+	
+	//	Get total account info as structure
 	function getAccount (address _owner) external onlyallow constant returns (account)
 	{
 		if (accounts [_owner].addr == _owner) return accounts [_owner];
 	}
-
+	
+	//	Install allow address
 	function setAllow (address _value) external onlyowner
 	{
 		allow = _value;
 	}
-
+	
+	//	@notice		Get address of the tokens holder by index at the holders array
+	//	@param		_index	index at the array
+	//	@result		Return holder address
 	function addrByIndex (uint _index) external onlyallow constant returns (address)
 	{
 		if (_index >= holders.length) return 0x0;
 		
 		return holders [_index];
 	}
-
+	
+	//	@notice		Same as addrByIndex, but returns value from accounts mapping
+	//				at the assigned address. It's important for the account exist checks
+	//	@param		_owner	holders address
+	//	@result		holder address
 	function getAddr (address _owner) external onlyallow constant returns (address)
 	{
 		return accounts [_owner].addr;
 	}
-
+	
+	//	@notice		Set or replace holder address. Be carefull!
+	//	@param		_owner	account holder address
+	//	@param		_value	new holder address
 	function setAddr (address _owner, address _value) external onlyallow
 	{
 		if (accounts [_owner].addr == _owner) accounts [_owner].addr = _value;
 	}
-
+	
+	//	@notice		Get holder balance in tokens
+	//	@param		_owner	holder address
+	//	@result		Current balance in tokens
 	function getValue (address _owner) external onlyallow constant returns (uint)
 	{
 		return accounts [_owner].value;
 	}
-
+	
+	//	@notice		Set or update holder balance in tokens
+	//	@param		_owner	holder address
+	//	@param		_value	new balance value
+	//	@param		_mode	how to change balance
+	//						0 - replace current value with new
+	//						1 - add new value to the current
+	//						2 - substract new value from current
+	//	@warning	This method doesn't check value ranges. So, this must executed by sender!
 	function setValue (address _owner, uint _value, uint _mode) external onlyallow
 	{
 		if (accounts [_owner].addr == _owner)
@@ -60,12 +90,18 @@ contract balances
 			else accounts [_owner].value -= _value;
 		}
 	}
-
+	
+	//	@notice		Check is account active or not
+	//	@param		_owner	holder address
+	//	@result		Boolean value (true if active, false in another cases)
 	function getEnabled (address _owner) external onlyallow constant returns (bool)
 	{
 		return accounts [_owner].enabled;
 	}
-
+	
+	//	@notice		Setup new activity value
+	//	@param		_owner	account owner address
+	//	@param		_value	new state value
 	function setEnabled (address _owner, bool _value) external onlyallow
 	{
 		if (accounts [_owner].addr == _owner) accounts [_owner].enabled = _value;
@@ -97,19 +133,19 @@ contract balances
 		return _owner;
 	}
 
-	function getIdentifier (address _owner) external onlyallow constant returns (uint)
+	function getIdentifier (address _owner) external onlyallow constant returns (string)
 	{
 		return accounts [_owner].identifier;
 	}
 
-	function setIdentifier (address _owner, uint _value) external onlyallow
+	function setIdentifier (address _owner, string _value) external onlyallow
 	{
 		if (accounts [_owner].addr == _owner) accounts [_owner].identifier = _value;
 	}
 
 	struct account
 	{
-		uint identifier;
+		string identifier;
 		uint locked;
 		bool enabled;
 		uint value;
@@ -127,13 +163,16 @@ contract general
 
 	//  Total issued or current volume of the tokens
 	uint public totalSupply = 0;
+	
 	//  Total sold tokens, not free or share
 	uint public totalSold = 0;
 	uint public totalWei = 0;
 	uint public totalReserved = 0;
 	uint public totalCompany = 0;
+	
 	//  Variable below consider the fractionality (N/10^decimals)
 	uint public tokensInSale = 500000;
+	
 	//  Bonus exchange rate for then volume above (value below * 1 token = Investors profit in tokens)
 	uint public tokensRate = 3500;
 
@@ -212,8 +251,10 @@ contract general
 
 		return true;
 	}
-
-	function kill (bool onlyEvent) external returns (bool)
+	
+	//	@notice		Set contract deletion state by sending event message or/and delete contract with all data
+	//	@param		onlyEvent	prevent full contract removing or not
+	function kill (bool onlyEvent) external
 	{
 		if (onlyEvent == true) Migrating (false);
 		else Migrating (true);
@@ -300,7 +341,7 @@ contract general
 
 	struct account
 	{
-		uint identifier;
+		string identifier;	//	External identifier. E.g. remote control server
 		uint locked;		//  What oprations is deprecated to the user
 		bool enabled;		//  Is account enabled
 		uint value;			//  Tokens balance
