@@ -108,17 +108,26 @@ contract balances
 	{
 		if (accounts [_owner].addr == _owner) accounts [_owner].enabled = _value;
 	}
-
+	
+	//	@notice		Account busy check. E.g. Account owner couldn't transfer any tokens in lock state
+	//	@param		_owner	locking account address
+	//	@result		Return current lock state (as binary flags)
 	function getLock (address _owner) external onlyallow constant returns (uint)
 	{
 		return accounts [_owner].locked;
 	}
-
+	
+	//	@notice		Set or drop account lock bits
+	//	@param		_owner	account address
+	//	@param		_value	value to replace current state
 	function setLock (address _owner, uint _value) external onlyallow
 	{
 		if (accounts [_owner].addr == _owner) accounts [_owner].locked = _value;
 	}
-
+	
+	//	@notice		Create new account
+	//	@param		_owner	account address
+	//	@result		Return holder address
 	function create (address _owner) external onlyallow returns (address) 
 	{
 		if (accounts [_owner].addr != _owner)
@@ -134,7 +143,10 @@ contract balances
 
 		return _owner;
 	}
-
+	
+	//	@notice		Get account external identifier (e.g. remote serve control)
+	//	@param		_owner	account address
+	//	@result		UTF-8 string value of the identifier
 	function getIdentifier (address _owner) external onlyallow constant returns (string)
 	{
 		return accounts [_owner].identifier;
@@ -144,7 +156,8 @@ contract balances
 	{
 		if (accounts [_owner].addr == _owner) accounts [_owner].identifier = _value;
 	}
-
+	
+	//	@notice		Default account info structure. See describtion at the bottom of this file
 	struct account
 	{
 		string identifier;
